@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t omonwik/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true omonwik/react-test npm test
+
+after_success:
+  - docker build -t omonwik/multi-client ./client
+  - docker build -t omonwik/multi-nginx ./nginx
+  - docker build -t omonwik/multi-server ./server
+  - docker build -t omonwik/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push omonwik/multi-client
+  - docker push omonwik/multi-nginx
+  - docker push omonwik/multi-server
+  - docker push omonwik/multi-worker
